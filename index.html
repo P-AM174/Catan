@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Catan Manager</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+        const RESOURCES = ['木材', 'レンガ', '羊毛', '小麦', '鉄鉱石'];
+        const COSTS = {
+            '街道': { 木材: 1, レンガ: 1 },
+            '開拓地': { 木材: 1, レンガ: 1, 羊毛: 1, 小麦: 1 },
+            '都市': { 小麦: 2, 鉄鉱石: 3 },
+            '発展カード': { 羊毛: 1, 小麦: 1, 鉄鉱石: 1 },
+        };
+
+        function App() {
+            const [inventory, setInventory] = useState({ 木材: 0, レンガ: 0, 羊毛: 0, 小麦: 0, 鉄鉱石: 0 });
+            const updateRes = (res, amount) => {
+                setInventory(prev => ({ ...prev, [res]: Math.max(0, prev[res] + amount) }));
+            };
+            const build = (item) => {
+                const cost = COSTS[item];
+                const canAfford = Object.keys(cost).every(res => inventory[res] >= cost[res]);
+                if (canAfford) {
+                    setInventory(prev => {
+                        const next = { ...prev };
+                        Object.keys(cost).forEach(res => { next[res] -= cost[res]; });
+                        return next;
+                    });
+                } else { alert("資源が足りません！"); }
+            };
+
+            return (
+                <div class="p-4 max-w-md mx-auto min-h-screen">
+                    <h1 class="text-2xl font-bold text-center mb-6">Catan Resource Manager</h1>
+                    <div class="space-y-3 mb-8">
+                        {RESOURCES.map(res => (
+                            <div key={res} class="flex items-center justify-between bg-white p-4 rounded-xl shadow">
+                                <span class="text-lg font-bold">{res}</span>
+                                <div class="flex items-center gap-4">
+                                    <button onClick={() => updateRes(res, -1)} class="bg-red-100 text-red-600 w-10 h-10 rounded-full text-xl">-</button>
+                                    <span class="text-2xl w-8 text-center">{inventory[res]}</span>
+                                    <button onClick={() => updateRes(res, 1)} class="bg-green-100 text-green-600 w-10 h-10 rounded-full text-xl">+</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        {Object.keys(COSTS).map(item => (
+                            <button key={item} onClick={() => build(item)} class="bg-blue-500 text-white py-3 rounded-lg font-medium shadow-md active:bg-blue-700">
+                                {item}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
